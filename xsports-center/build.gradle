@@ -1,0 +1,188 @@
+plugins {
+    id 'java'
+    // Test coverage
+    id 'jacoco'
+
+    // Code style
+    id 'checkstyle'
+
+    // PMD
+    id 'pmd'
+
+    // PITest
+    id 'info.solidsoft.pitest' version '1.5.2'
+
+    id 'org.springframework.boot' version '2.5.7'
+    id 'io.spring.dependency-management' version '1.0.11.RELEASE'
+
+    id "com.github.spotbugs" version "5.0.4"
+}
+
+apply plugin: 'info.solidsoft.pitest'
+pitest {
+    //adds dependency to org.pitest:pitest-junit5-plugin and sets "testPlugin" to "junit5"
+    junit5PluginVersion = '0.12'
+
+    targetClasses = ['nl.tudelft.sem.*']  //by default "${project.group}.*"
+    pitestVersion = '1.5.1' //not needed when a default PIT version should be used
+    threads = 4
+    outputFormats = ['XML', 'HTML']
+    timestampedReports = false
+    failWhenNoMutations = false
+    skipFailingTests = true
+}
+
+allprojects {
+
+    bootJar {
+        enabled = false
+    }
+
+    jar {
+        enabled = true
+    }
+
+    repositories {
+        mavenCentral()
+    }
+
+    ext {
+        set('springCloudVersion', "2020.0.4")
+    }
+
+    group = 'nl.tudelft.cse.sem'
+    version = '0.0.1-SNAPSHOT'
+}
+
+subprojects {
+
+    apply plugin: 'java'
+    apply plugin: 'checkstyle'
+    apply plugin: 'jacoco'
+    apply plugin: 'com.github.spotbugs'
+
+    sourceCompatibility = 11
+    targetCompatibility = 11
+    group = 'com.github.spotbugs.snom'
+
+    spotbugs {
+        ignoreFailures = true
+    }
+
+    spotbugsMain {
+        reports {
+            xml.enabled(false);
+            html.enabled(true);
+        }
+    }
+
+    spotbugsTest {
+        reports {
+            xml.enabled(false);
+            html.enabled(true);
+        }
+    }
+
+    test {
+        useJUnitPlatform()
+        finalizedBy jacocoTestReport
+        jacoco {
+            enabled = true
+            includes = ['nl.tudelft.sem.*']
+            excludes = []
+        }
+    }
+
+    jacocoTestReport {
+        dependsOn test
+        reports {
+            xml.required = false
+            csv.required = false
+            html.outputLocation = layout.buildDirectory.dir('jacocoHtml')
+        }
+    }
+
+    jacocoTestCoverageVerification {
+        dependsOn test
+        violationRules {
+            rule {
+                enabled = true
+                element = 'CLASS'
+                includes = ['nl.tudelft.sem.*']
+
+                limit {
+                    counter = 'BRANCH'
+                    value = 'COVEREDRATIO'
+                    minimum = 0.0
+                }
+            }
+        }
+    }
+
+    checkstyle {
+        toolVersion "8.37"
+        configFile = file("${rootDir}/config/checkstyle/checkstyle.xml")
+    }
+
+    pmd {
+        incrementalAnalysis = true
+    }
+
+//    pitest {
+//        //adds dependency to org.pitest:pitest-junit5-plugin and sets "testPlugin" to "junit5"
+//        junit5PluginVersion = '0.12'
+//
+//        targetClasses = ['nl.tudelft.sem.template.*']  //by default "${project.group}.*"
+//        pitestVersion = '1.5.1' //not needed when a default PIT version should be used
+//        threads = 4
+//        outputFormats = ['XML', 'HTML']
+//        timestampedReports = false
+//    }
+
+    ext {
+        spotBugsVersion = '4.5.3'
+    }
+
+    dependencies {
+
+        compileOnly "com.github.spotbugs:spotbugs:${spotBugsVersion}"
+
+        implementation 'org.springframework.boot:spring-boot-configuration-processor'
+        implementation 'org.springframework.boot:spring-boot-starter:2.6.1'
+        implementation 'org.springframework.boot:spring-boot-autoconfigure'
+        implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+        testImplementation('org.springframework.boot:spring-boot-starter-test:2.6.1') {
+            exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
+        }
+
+        implementation 'org.springframework.boot:spring-boot-starter-web:2.6.1'
+
+        //api gateway
+        implementation group: 'com.sun.jersey.contribs', name: 'jersey-apache-client4', version: '1.19.4'
+        implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-server:3.0.4'
+        implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client:3.0.4'
+        testImplementation 'org.springframework.boot:spring-boot-starter-test:2.6.1'
+
+        // H2 database
+        runtimeOnly 'com.h2database:h2'
+
+        //Testing
+        testImplementation('org.junit.jupiter:junit-jupiter:5.5.2')
+        testImplementation group: 'org.mockito', name: 'mockito-core', version: '3.1.0'
+        testImplementation('org.assertj:assertj-core:3.14.0')
+
+        // Lombok
+        compileOnly 'org.projectlombok:lombok'
+        annotationProcessor 'org.projectlombok:lombok'
+    }
+
+    test {
+        useJUnitPlatform()
+    }
+
+    dependencyManagement {
+        imports {
+            mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+        }
+    }
+}
