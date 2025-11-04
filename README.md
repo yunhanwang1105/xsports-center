@@ -4,7 +4,7 @@
 
 ## XSports Center Platform
 
-Distributed microservices platform for managing sports facilities, lessons, users, and reservations with service discovery, API gateway, and production-grade quality gates.
+Enterprise-grade distributed microservices platform built with Spring Boot and Spring Cloud for managing sports facilities, lessons, user accounts, and reservations. Features service discovery via Eureka, unified API gateway routing, JWT-based authentication, and comprehensive quality gates including mutation testing, static analysis, and code coverage reporting.
 
 </div>
 
